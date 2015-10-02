@@ -40,7 +40,7 @@ Install dev dependencies:
 npm install  # This command will install Gulp and all necessary modules
 ```
 
-## How to Engage, Contribute and Provide Feedback
+##  How to Engage, Contribute and Provide Feedback
 
 There are many ways in which you can contribute to Power BI visuals:
 * You can contribute fixes and new visuals to this repo, read the [contribution guildelines](https://github.com/Microsoft/PowerBI-visuals/blob/master/CONTRIBUTING.md).
