@@ -29,6 +29,12 @@
 module powerbi.visuals.plugins {
     // This file registers the built-in visualizations
 
+    export var ganttChart: IVisualPlugin = {
+        name: 'ganttChart',
+        capabilities: samples.HelloIVisual.capabilities,
+        create: () => new samples.GanttChart()
+    };
+
     export var animatedNumber: IVisualPlugin = {
         name: 'animatedNumber',
         capabilities: capabilities.animatedNumber,
