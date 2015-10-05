@@ -29,7 +29,7 @@
 module powerbi.visuals.samples {
     import SelectionManager = utility.SelectionManager;
     export interface GanttViewModel {
-        text: string;
+        tasks: any;
         color: string;
         size: number;
         selector: SelectionId;
@@ -78,31 +78,46 @@ module powerbi.visuals.samples {
         private milestoneShapes: D3.Selection;
         private taskBars: D3.Selection;
         private progressBars: D3.Selection;
-        
         private tasks: any;
         
         
+        private static taskArrayToDict(taskArray: any[]):any{
+        
+                console.log("Task Array to DICT");
+                var task : any;
+                task = {"ID":parseInt(taskArray[0]),
+                        "name":taskArray[1],
+                        "startDate":taskArray[2],
+                        "endDate":taskArray[3],
+                        "color":taskArray[4],
+                        "resource":taskArray[5],
+                        "group":taskArray[6],
+                        "completion":taskArray[7],
+                        "d":taskArray[8],
+                        "shape":taskArray[9],
+                        "t":taskArray[10]
+            };
+                return task;
+        }
+        
         public static converter(dataView: DataView): GanttViewModel {
+            var tasks: any[] = [];
+            dataView.table.rows.forEach(function(row, i) {
+                row = GanttChart.taskArrayToDict(row);
+                console.log(JSON.stringify(row));
+                tasks.push(row);
+            });
+            
             var viewModel: GanttViewModel = {
+                tasks: tasks,
                 size: GanttChart.getSize(dataView),
                 color: GanttChart.getFill(dataView).solid.color,
-                text: "test",
                 toolTipInfo: [{
                     displayName: 'Test',
                     value: 'working',
                 }],
                 selector: SelectionId.createNull()
             };
-            var table = dataView.table;
-            if (!table) return viewModel;
-
-            viewModel.text = table.rows[0][0];
-            if (dataView.categorical) {
-                viewModel.selector = dataView.categorical.categories[0].identity
-                    ? SelectionId.createWithId(dataView.categorical.categories[0].identity[0])
-                    : SelectionId.createNull();
-            }
-
             return viewModel;
         }
 
@@ -251,14 +266,20 @@ module powerbi.visuals.samples {
         
         
         public update(options: VisualUpdateOptions) {
-                var tasks = [{"color":"green","name":"Task 1","ID":1,"startDate":"2014-12-31T10:00:00.000Z","shape":"none","endDate":"2014-12-31T23:00:00.000Z","resource":"Amir","group":"Microsoft","d":"A","completion":"80","t":0},{"color":"blue","name":"Task 2","ID":2,"startDate":"2014-12-31T23:00:00.000Z","shape":"none","endDate":"2015-01-02T23:00:00.000Z","resource":"Amir","group":"Microsoft","d":"B","completion":"70","t":48},{"color":"black","name":"specs","ID":3,"startDate":"2015-01-02T23:00:00.000Z","shape":"triangle","endDate":"2015-01-04T23:00:00.000Z","resource":"Joerg","group":"freelancer","d":"A","completion":"100","t":48},{"color":"blue","name":"Task 4","ID":4,"startDate":"2015-01-02T23:00:00.000Z","shape":"none","endDate":"2015-01-07T23:00:00.000Z","resource":"Joerg","group":"freelancer","d":"B","completion":"100","t":72},{"color":"green","name":"Task 5","ID":5,"startDate":"2015-01-07T23:00:00.000Z","shape":"none","endDate":"2015-01-09T23:00:00.000Z","resource":"Amir","group":"Microsoft","d":"C","completion":"10","t":48},{"color":"blue","name":"Task 6","ID":6,"startDate":"2015-01-09T23:00:00.000Z","shape":"none","endDate":"2015-01-10T23:00:00.000Z","resource":"Amir","group":"Microsoft","d":"A","completion":"80","t":24},{"color":"red","name":"task 7","ID":7,"startDate":"2015-01-10T23:00:00.000Z","shape":"none","endDate":"2015-01-11T23:00:00.000Z","resource":"Joerg","group":"freelancer","d":"C","completion":"30","t":0},{"color":"green","name":"Task 8","ID":8,"startDate":"2015-01-11T23:00:00.000Z","shape":"none","endDate":"2015-01-12T23:00:00.000Z","resource":"Amir","group":"Microsoft","d":"C","completion":"10","t":48},{"color":"green","name":"Task 9","ID":9,"startDate":"2015-01-12T23:00:00.000Z","shape":"none","endDate":"2015-01-14T23:00:00.000Z","resource":"Amir","group":"Microsoft","d":"A","completion":"30","t":48},{"color":"black","name":"delivery","ID":10,"startDate":"2015-01-14T23:00:00.000Z","shape":"triangle","endDate":"2015-01-17T23:00:00.000Z","resource":"Joerg","group":"freelancer","d":"A","completion":"50","t":72}];
             
             
-            if (!options.dataViews && !options.dataViews[0]) return;
             var dataView = this.dataView = options.dataViews[0];
             var viewport = options.viewport;
             var viewModel: GanttViewModel = GanttChart.converter(dataView);
 
+            var tasks = viewModel.tasks;
+            
+        
+    
+            if (!options.dataViews && !options.dataViews[0]) return;
+            
+            
+            
             this.root.attr({
                 'height': viewport.height,
                 'width': viewport.width
@@ -304,6 +325,12 @@ module powerbi.visuals.samples {
             this.updateLabels(tasks);
             this.updateTaskLines(tasks, width);
             
+            toolTipInfo: [{
+                    displayName: 'Test',
+                    value: 'working',
+                }]
+            
+            TooltipManager.addTooltip(this.root, (tooltipEvent: TooltipEvent) => tooltipEvent.data.toolTipInfo);
             /*var zoom = d3.behavior.zoom()
                 .on("zoom", this.updateZoomTimeline);
         

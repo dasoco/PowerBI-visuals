@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
@@ -33,6 +33,7 @@ module powerbi.visuals.sampleData {
     export class SampleData {
 
         private static data = [
+            new sampleDataViews.SimpleGanttData(),
             new sampleDataViews.DistrictSalesData(),
             new sampleDataViews.FileStorageData(),
             new sampleDataViews.ImageData(),
@@ -45,7 +46,10 @@ module powerbi.visuals.sampleData {
             new sampleDataViews.SimpleMatrixData(),
             new sampleDataViews.SimpleTableData(),
             new sampleDataViews.TeamScoreData(),
-            new sampleDataViews.ProductSalesByDate()
+            new sampleDataViews.ProductSalesByDate(),
+           
+            
+            
         ];
 
         /**
