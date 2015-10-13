@@ -27,44 +27,248 @@
 /// <reference path="../_references.ts"/>
 
 module powerbi.visuals.sampleDataViews {
-    import ValueType = powerbi.ValueType;
-    import PrimitiveType = powerbi.PrimitiveType;
+    import DataViewTransform = powerbi.data.DataViewTransform;
+
+    interface task{
+        shape: string,
+        start: Date,
+        end: Date,
+        group: string,
+        completion: number,
+    }
     
     export class SimpleGanttData extends SampleDataViews implements ISampleDataViewsMethods {
 
         public name: string = "SimpleGanttData";
-        public displayName: string = "Simple Gantt data";
+        public displayName: string = "Gantt Data";
 
-        public visuals: string[] = ['ganttChart',
-        ];
+        public visuals: string[] = ['ganttChart'];
+        
+        private currenetTaskId: number;
+        private currentDate: Date;
+        
+        private groupValues: string[];
+        private startValues: Date[];
+        private endValues: Date[];
+        private durationValues: number[];
+        private nameValues: string[];
+        private shapeValues: string[];
+        private resourceValues: string[];
+        private descriptionValues: string[];
+        private idValues: string[];                
 
+        
         public getDataViews(): DataView[] {
-            var dataTypeNumber = ValueType.fromPrimitiveTypeAndCategory(PrimitiveType.Double);
-            var dataTypeString = ValueType.fromPrimitiveTypeAndCategory(PrimitiveType.Text);            
 
-            var groupSource1: DataViewMetadataColumn = { displayName: 'group1', type: dataTypeString, index: 0 };
-            var groupSource2: DataViewMetadataColumn = { displayName: 'group2', type: dataTypeString, index: 1 };
-            var groupSource3: DataViewMetadataColumn = { displayName: 'group3', type: dataTypeString, index: 2 };
+            let fieldExpr = powerbi.data.SQExprBuilder.fieldExpr({ column: { schema: 's', entity: "table1", name: "country" } });
 
             
-
-            return [{
-                metadata: { columns: [groupSource1, groupSource2, groupSource3] },
-                table: {
-                    columns: [groupSource1, groupSource2, groupSource3],
-                    rows: [["1","Task 1","2014-12-31T23:00:00.000Z","2015-01-03T23:00:00.000Z","red","Yvonne","A","30","B","none",72],["2","Task2","2015-01-03T23:00:00.000Z","2015-01-06T23:00:00.000Z","red","Yvonne","A","50","C","none",72],["3","Milestone","2015-01-06T23:00:00.000Z","2015-01-06T23:00:00.000Z","black","Ruth","B","40","C","triangle",0],
-["4","Task 4","2015-01-06T23:00:00.000Z","2015-01-09T23:00:00.000Z","green","Owen","A","80","B","none",72],
-["5","Task 5","2015-01-09T23:00:00.000Z","2015-01-11T23:00:00.000Z","blue","Tracey","B","30","B","none",48],
-["6","Task 6","2015-01-11T23:00:00.000Z","2015-01-13T23:00:00.000Z","blue","Ruth","B","90","C","none",48],
-["7","Task 7","2015-01-13T23:00:00.000Z","2015-01-16T23:00:00.000Z","green","Owen","A","40","A","none",72],
-["8","Task 8","2015-01-16T23:00:00.000Z","2015-01-17T23:00:00.000Z","red","Tracey","B","70","B","none",24],
-["9","Task 9","2015-01-17T23:00:00.000Z","2015-01-18T23:00:00.000Z","red","Tracey","B","100","A","none",24],
-["10","Task 10","2015-01-18T23:00:00.000Z","2015-01-20T23:00:00.000Z","green","Yvonne","A","10","C","none",48]]
-                }
-            }];
+            
+            let idToMetaColumns : {[id: string]: DataViewMetadataColumn;} = {};
+            
+        if (this.groupValues === undefined){
+            this.randomize();
         }
-
+            
+            idToMetaColumns["id"] = 
+            {
+                        displayName: 'ID',
+                        isMeasure: false,
+                        queryName: 'id',
+                        roles: {"id": true},
+                        type: powerbi.ValueType.fromDescriptor({ text: true })
+            };
+            idToMetaColumns["description"] = 
+            {
+                        displayName: 'Description',
+                        isMeasure: false,
+                        queryName: 'description',
+                        roles: {"description": true},
+                        type: powerbi.ValueType.fromDescriptor({ text: true })
+            };
+            idToMetaColumns["resource"] = 
+            {
+                        displayName: 'Resource',
+                        isMeasure: false,
+                        queryName: 'resource',
+                        roles: {"resource": true},
+                        type: powerbi.ValueType.fromDescriptor({ text: true })
+            };
+            idToMetaColumns["shape"] = 
+            {
+                        displayName: 'Shape',
+                        isMeasure: false,
+                        queryName: 'shape',
+                        roles: {"shape": true},
+                        type: powerbi.ValueType.fromDescriptor({ text: true })
+            };
+            idToMetaColumns["name"] = 
+            {
+                        displayName: 'Name',
+                        isMeasure: false,
+                        queryName: 'name',
+                        roles: {"name": true},
+                        type: powerbi.ValueType.fromDescriptor({ text: true })
+            };
+            idToMetaColumns["group"] = 
+            {
+                        displayName: 'Group',
+                        isMeasure: false,
+                        queryName: 'group',
+                        roles: {"group": true},
+                        type: powerbi.ValueType.fromDescriptor({ text: true })
+            };
+            idToMetaColumns["start"] = 
+            {
+                        displayName: 'Start Date',
+                        groupName: 'Start Date',
+                        isMeasure: false,
+                        queryName: "startDate",
+                        roles: { "start": true },
+                        type: powerbi.ValueType.fromDescriptor({ text: true })            
+            };
+            idToMetaColumns["end"] = 
+            {
+                        displayName: 'End Date',
+                        groupName: 'End Date',
+                        isMeasure: false,
+                        queryName: "endDate",
+                        roles: { "end": true },
+                        type: powerbi.ValueType.fromDescriptor({ text: true })            
+            };
+            idToMetaColumns["completion"] = 
+            {
+                        displayName: 'Completion',
+                        groupName: 'Completion',
+                        isMeasure: true,
+                        queryName: "completion",
+                        roles: { "completion": true },
+                        type: powerbi.ValueType.fromDescriptor({ numeric: true })            
+            };
+            
+            
+            
+            // Metadata, describes the data columns, and provides the visual with hints
+            // so it can decide how to best represent the data
+            let dataViewMetadata: powerbi.DataViewMetadata = {
+                    columns: [
+                            idToMetaColumns["id"],
+                            idToMetaColumns["description"],
+                            idToMetaColumns["resource"],
+                            idToMetaColumns["shape"],
+                            idToMetaColumns["name"],
+                            idToMetaColumns["group"],
+                            idToMetaColumns["start"],
+                            idToMetaColumns["end"],
+                            idToMetaColumns["completion"],
+                ],
+                objects: { categoryLabels: { show: true } },
+            };
+            
+            let columns = [
+                {
+                    source: idToMetaColumns["completion"],
+                    values: this.durationValues,
+                }];
+                        
+            let dataValues: DataViewValueColumns = DataViewTransform.createValueColumns(columns);
+            
+            return [{
+                metadata: dataViewMetadata,
+                    categorical: {
+                        categories: [
+                        {
+                            source: idToMetaColumns["id"],
+                            values: this.idValues,
+                        },
+                        {
+                            source: idToMetaColumns["description"],
+                            values: this.descriptionValues,
+                        },
+                        {
+                            source: idToMetaColumns["resource"],
+                            values: this.resourceValues,
+                        },
+                        {
+                            source: idToMetaColumns["shape"],
+                            values: this.shapeValues,
+                        },
+                        {
+                            source: idToMetaColumns["name"],
+                            values: this.nameValues,
+                        },
+                        {
+                            source: idToMetaColumns["group"],
+                            values: this.groupValues,
+                        },
+                        {
+                            source: idToMetaColumns["start"],
+                            values: this.startValues,
+                        },
+                        {
+                            source: idToMetaColumns["end"],
+                            values: this.endValues,
+                        }    
+                        ],
+                        values: dataValues
+                    }
+                }];
+        }
+        
+        private getRandomTask():task{
+            var start: Date = this.currentDate;
+            var shape:string = _.sample(["none","none","none","none","none","none","none",
+                                        "circle","triangle", "star"]);
+            
+            if (shape === "none"){
+                this.currentDate = d3.time.hour.offset(this.currentDate, _.sample([24,48,72]));    
+            }
+            
+            var new_task: task ={
+                shape: shape,
+                start: start,
+                end: this.currentDate,
+                group: _.sample(["A","B"]),
+                completion: _.sample([10,20,30,40,50,60,70,80,90,100])
+            }   
+            return new_task;
+        }
+        
         public randomize(): void {
+            var maxTask:number = _.sample([1,2,3,4,5,6,7,8,9,10]);
+            this.startValues = [];
+            this.endValues = [];
+            this.durationValues = [];
+            this.groupValues = [];
+            this.nameValues = [];
+            this.shapeValues = [];
+            this.resourceValues = [];
+            this.descriptionValues = [];
+            this.idValues = []
+            this.currenetTaskId = 0;
+            this.currentDate = new Date(Date.now());
+            this.currentDate = d3.time.hour.offset(this.currentDate, _.sample([-24,-48,-72]));    
+            for (let i = 0; i < maxTask; i++) {
+                var new_task: task = this.getRandomTask()
+                this.startValues.push(new_task.start)
+                this.endValues.push(new_task.end)
+                this.durationValues.push(new_task.completion)
+                this.groupValues.push(new_task.group)    
+                this.shapeValues.push(new_task.shape)
+                this.resourceValues.push(_.sample(["R1","R2"]));
+                this.descriptionValues.push("Description " + i);
+                this.idValues.push(i.toString());
+                if (new_task.shape === "none"){
+                    this.nameValues.push("Task: "+i)
+                }
+                else{
+                    this.nameValues.push("Milestone")                
+                }
+                        
+            }
+            
+            
+            
         }
         
     }
